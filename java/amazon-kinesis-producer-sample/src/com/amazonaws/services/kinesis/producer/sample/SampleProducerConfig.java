@@ -46,12 +46,12 @@ public class SampleProducerConfig {
     /**
      * Change this to your stream name.
      */
-    public static final String STREAM_NAME_DEFAULT = "test";
+    public static final String STREAM_NAME_DEFAULT = "kinesis-kpl-demo";
 
     /**
      * Change this to the region you are using.
      */
-    public static final String REGION_DEFAULT = "us-west-1";
+    public static final String REGION_DEFAULT = "us-east}|-1";
 
     @NotBlank(message = "KPL Sample region should not be null or blank" )
     private final String region;

@@ -22,6 +22,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.concurrent.Executors;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,11 @@ import com.amazonaws.services.kinesis.producer.UserRecordResult;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.FileWriter;
+import java.io.FileReader;
+import com.opencsv.CSVReader;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * The Kinesis Producer Library (KPL) excels at handling large numbers of small
@@ -139,30 +145,24 @@ public class SampleProducer {
                 ByteBuffer data = null;
 
                 try {
-                    URL url = new URL("https://platform.tier-services.io/v2/vehicle?zoneId=LEIPZIG");
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("X-API-Key", "bpEUTJEBTf74oGRWxaIcW7aeZMzDDODe1yBoSxi2");
+                    // Read data from .csv file
+                    CSVReader csvReader = new CSVReader(new FileReader("leipzig_data_1.csv"));
+                    List<String[]> csvData = csvReader.readAll();
+                    csvReader.close();
 
-                    int responseCode = connection.getResponseCode();
-                    if (responseCode == HttpURLConnection.HTTP_OK) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        String line;
-                        StringBuilder response = new StringBuilder();
-                        while ((line = reader.readLine()) != null) {
-                            response.append(line);
+                    // Convert data to a single string
+                    StringBuilder response = new StringBuilder();
+                    for (String[] row : csvData) {
+                        for (String cell : row) {
+                            response.append(cell).append(",");
                         }
-                        reader.close();
-
-                       
-                        data = ByteBuffer.wrap(response.toString().getBytes());
-                    } else {
-                        // Handle error response
-                        log.error("Failed to fetch data from API. Response code: " + responseCode);
+                        response.append("\n");
                     }
+
+                    data = ByteBuffer.wrap(response.toString().getBytes());
                 } catch (IOException e) {
                     // Handle exception
-                    log.error("Exception occurred while fetching data from API", e);
+                    log.error("Exception occurred while reading data from .csv file", e);
                 }
 
                 // TIMESTAMP is our partition key

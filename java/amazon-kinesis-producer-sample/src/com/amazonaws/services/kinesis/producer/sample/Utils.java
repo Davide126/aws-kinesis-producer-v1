@@ -15,10 +15,17 @@
 
 package com.amazonaws.services.kinesis.producer.sample;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Random;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Utils {
     private static final Random RANDOM = new Random();
@@ -47,13 +54,35 @@ public class Utils {
         StringBuilder sb = new StringBuilder();
         sb.append(Long.toString(sequenceNumber));
         sb.append(" ");
-        while (sb.length() < totalLen) {
-            sb.append("a");
-        }
+
         try {
-            return ByteBuffer.wrap(sb.toString().getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            URL url = new URL("https://platform.tier-services.io/v2/vehicle?zoneId=LEIPZIG");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("X-API-Key", "bpEUTJEBTf74oGRWxaIcW7aeZMzDDODe1yBoSxi2");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                StringBuilder response = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+
+                sb.append(response.toString());
+            } else {
+                // Handle error response
+                System.out.println("Failed to fetch data from API. Response code: " + responseCode);
+            }
+        } catch (IOException e) {
+            // Handle exception
+            System.out.println("Exception occurred while fetching data from API");
+            e.printStackTrace();
         }
+
+        ByteBuffer data = ByteBuffer.wrap(sb.toString().getBytes());
+        return data;
     }
 }

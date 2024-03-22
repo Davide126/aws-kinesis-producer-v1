@@ -142,35 +142,7 @@ public class SampleProducer {
         final Runnable putOneRecord = new Runnable() {
             @Override
             public void run() {
-                ByteBuffer data = null;
-
-
-                try {
-                    URL url = new URL("https://platform.tier-services.io/v2/vehicle?zoneId=LEIPZIG");
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("X-API-Key", "bpEUTJEBTf74oGRWxaIcW7aeZMzDDODe1yBoSxi2");
-
-                    int responseCode = connection.getResponseCode();
-                    if (responseCode == HttpURLConnection.HTTP_OK) {
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                        String line;
-                        StringBuilder response = new StringBuilder();
-                        while ((line = reader.readLine()) != null) {
-                            response.append(line);
-                        }
-                        reader.close();
-
-                       
-                        data = ByteBuffer.wrap(response.toString().getBytes());
-                    } else {
-                        // Handle error response
-                        log.error("Failed to fetch data from API. Response code: " + responseCode);
-                    }
-                } catch (IOException e) {
-                    // Handle exception
-                    log.error("Exception occurred while fetching data from API", e);
-                }
+                ByteBuffer data = Utils.generateData(sequenceNumber.get(), config.getDataSize());
                 // TIMESTAMP is our partition key
                 ListenableFuture<UserRecordResult> f =
                         producer.addUserRecord(config.getStreamName(), TIMESTAMP, Utils.randomExplicitHashKey(), data);

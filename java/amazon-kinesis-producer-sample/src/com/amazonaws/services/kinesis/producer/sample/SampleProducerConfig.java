@@ -51,7 +51,7 @@ public class SampleProducerConfig {
     /**
      * Change this to the region you are using.
      */
-    public static final String REGION_DEFAULT = "us-east}|-1";
+    public static final String REGION_DEFAULT = "us-east-1";
 
     @NotBlank(message = "KPL Sample region should not be null or blank" )
     private final String region;

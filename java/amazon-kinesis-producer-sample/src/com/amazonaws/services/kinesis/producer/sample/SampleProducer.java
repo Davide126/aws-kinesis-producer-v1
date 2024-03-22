@@ -144,27 +144,33 @@ public class SampleProducer {
             public void run() {
                 ByteBuffer data = null;
 
+
                 try {
-                    // Read data from .csv file
-                    CSVReader csvReader = new CSVReader(new FileReader("leipzig_data_1.csv"));
-                    List<String[]> csvData = csvReader.readAll();
-                    csvReader.close();
+                    URL url = new URL("https://platform.tier-services.io/v2/vehicle?zoneId=LEIPZIG");
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setRequestProperty("X-API-Key", "bpEUTJEBTf74oGRWxaIcW7aeZMzDDODe1yBoSxi2");
 
-                    // Convert data to a single string
-                    StringBuilder response = new StringBuilder();
-                    for (String[] row : csvData) {
-                        for (String cell : row) {
-                            response.append(cell).append(",");
+                    int responseCode = connection.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                        String line;
+                        StringBuilder response = new StringBuilder();
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
                         }
-                        response.append("\n");
-                    }
+                        reader.close();
 
-                    data = ByteBuffer.wrap(response.toString().getBytes());
+                       
+                        data = ByteBuffer.wrap(response.toString().getBytes());
+                    } else {
+                        // Handle error response
+                        log.error("Failed to fetch data from API. Response code: " + responseCode);
+                    }
                 } catch (IOException e) {
                     // Handle exception
-                    log.error("Exception occurred while reading data from .csv file", e);
+                    log.error("Exception occurred while fetching data from API", e);
                 }
-
                 // TIMESTAMP is our partition key
                 ListenableFuture<UserRecordResult> f =
                         producer.addUserRecord(config.getStreamName(), TIMESTAMP, Utils.randomExplicitHashKey(), data);
